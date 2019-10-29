@@ -13,7 +13,7 @@ labels:
 parameters:
 - name: GIT_REPOSITORY
   displayName: Git repository
-  value: ssh://git@git.bmwgroup.net:7999/confluent/bmw-confluent-testing.git
+  value: ssh://git@github.com:janmejaysingh/myfinalpayara.git
   description: The Git source code repository.
   required: true
 - name: GIT_REF
