@@ -1,0 +1,76 @@
+apiVersion: v1
+kind: Template
+metadata:
+  name: s2i-payara-image-builder
+  annotations:
+    description: s2i image build template
+    openshift.io/display-name: S2I Image Builder
+    iconClass: icon-infinispan
+    tags: s2i
+labels:
+  template: s2i-payara-image-builder
+  component: s2i
+parameters:
+- name: GIT_REPOSITORY
+  displayName: Git repository
+  value: ssh://git@git.bmwgroup.net:7999/confluent/bmw-confluent-testing.git
+  description: The Git source code repository.
+  required: true
+- name: GIT_REF
+  displayName: Git branch
+  description: The Git source reference.
+  value: master
+  required: true
+- name: GIT_SECRET
+  displayName: Git Secret
+  description: The secret to access the Git repository.
+  value: git-secret
+  required: true
+- name: IMAGE_STREAM_NAME
+  displayName: Image Stream Name
+  description: The name of the output image stream.
+  value: s2i-payara-image
+  required: true
+- name: IMAGE_STREAM_VERSION
+  displayName: Image Strean Version
+  description: The version of the output image stream.
+  value: latest
+  required: true
+- name: PROXY_SECRET
+  displayName: Proxy Secret
+  description: The secret holding the credentials to authenticate with the myProxy proxy.
+  value: proxy-secret
+  required: true
+objects:
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    name: ${IMAGE_STREAM_NAME}
+  spec:
+    tags:
+    - name: latest
+      from:
+        kind: ImageStreamTag
+        name: ${IMAGE_STREAM_VERSION}
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    name: s2i-payara-builder
+  spec:
+    runPolicy: Serial
+    source:
+      git:
+        uri: ${GIT_REPOSITORY}
+        ref: ${GIT_REF}
+      sourceSecret:
+        name: ${GIT_SECRET}
+      secrets:
+      - secret:
+          name: ${PROXY_SECRET}
+        destinationDir: secrets/proxy
+    strategy:
+      type: Docker
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${IMAGE_STREAM_NAME}:${IMAGE_STREAM_VERSION}
